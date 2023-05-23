@@ -1,5 +1,6 @@
 require('dotenv/config');
 const express = require('express');
+const venom = require("venom-bot");
 const {listenMessages} = require("./Controllers/messages");
 const {response} = require("express");
 const app = express();
@@ -43,7 +44,31 @@ app.use(express.json());
 
 app.get('/init', async function (req, res) {
     if(!clienteVenom){
-        console.log(123)
+        let aux = await venom.create(
+            'session',
+            (base64Qr, asciiQR, attempts, urlCode) => {
+                const matches = base64Qr.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/), response = {};
+                if (matches.length !== 3) {
+                    return new Error('Invalid input string');
+                }
+                response.type = matches[1];
+                response.data = new Buffer.from(matches[2], 'base64');
+                res.writeHead(200, {
+                    'Content-Type': matches[1],
+                    'Content-Length': response.data.length
+                });
+                res.end(response.data);
+
+            },
+            (statusSession, session) => {
+                console.log('Status Session: ', statusSession);
+                console.log('Session name: ', session);
+            },
+            {logQR: false}
+        ).then((client) => {
+            start(client)
+            res.send('Ready!!!! '+ new Date());
+        }).catch((e)=>console.log('Error al crear instacia',e));
     }else{
         res.send('Ya tienes iniciada una sesión');
     }

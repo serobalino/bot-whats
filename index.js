@@ -1,5 +1,6 @@
 require('dotenv/config');
 const express = require('express');
+const venom = require("venom-bot");
 const {listenMessages} = require("./Controllers/messages");
 const app = express();
 let clienteVenom = null;
@@ -42,7 +43,6 @@ app.use(express.json());
 
 app.get('/init', async function (req, res) {
     if(!clienteVenom){
-        const venom = require("venom-bot");
         let aux = await venom.create(
             'session',
             (base64Qr, asciiQR, attempts, urlCode) => {

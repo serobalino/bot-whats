@@ -2,7 +2,6 @@ require('dotenv/config');
 const express = require('express');
 const venom = require("venom-bot");
 const {listenMessages} = require("./Controllers/messages");
-const {response} = require("express");
 const app = express();
 let clienteVenom = null;
 

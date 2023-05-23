@@ -42,7 +42,11 @@ app.use(express.json());
 
 app.get('/init', async function (req, res) {
     if(!clienteVenom){
-        const venom = require("venom-bot");
+        try{
+            const venom = require("venom-bot");
+        }catch (e) {
+            console.log(e);
+        }
         let aux = await venom.create(
             'session',
             (base64Qr, asciiQR, attempts, urlCode) => {

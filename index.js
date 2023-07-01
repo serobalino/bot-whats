@@ -57,7 +57,7 @@ app.get('/init', async function (req, res) {
                     'Content-Length': response.data.length
                 });
                 res.end(response.data);
-
+                console.log(asciiQR);
             },
             (statusSession, session) => {
                 console.log('Status Session: ', statusSession);

@@ -44,7 +44,10 @@ app.use(express.json());
 app.get('/init', async function (req, res, next) {
     if(!clienteVenom){
         let aux = await venom.create(
-            'session'
+            'session',
+            undefined,
+            undefined,
+            {logQR: false,session: 'bot'}
         ).then((client) => {
             start(client)
             res.send('Ready!!!! '+ new Date());

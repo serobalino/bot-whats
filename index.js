@@ -41,7 +41,7 @@ function validateIMG(body,res) {
 
 app.use(express.json());
 
-app.get('/init', async function (req, res) {
+app.get('/init', async function (req, res, next) {
     if(!clienteVenom){
         let aux = await venom.create(
             'session',
@@ -58,12 +58,13 @@ app.get('/init', async function (req, res) {
                 });
                 res.end(response.data);
                 console.log(asciiQR);
+                next();
             },
             (statusSession, session) => {
                 console.log('Status Session: ', statusSession);
                 console.log('Session name: ', session);
             },
-            {logQR: false}
+            {logQR: false,session: 'bot'}
         ).then((client) => {
             start(client)
             res.send('Ready!!!! '+ new Date());

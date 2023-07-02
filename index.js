@@ -45,25 +45,8 @@ app.get('/init', async function (req, res, next) {
     if(!clienteVenom){
         let aux = await venom.create(
             'session',
-            (base64Qr, asciiQR, attempts, urlCode) => {
-                const matches = base64Qr.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/), response = {};
-                if (matches.length !== 3) {
-                    return new Error('Invalid input string');
-                }
-                response.type = matches[1];
-                response.data = new Buffer.from(matches[2], 'base64');
-                res.writeHead(200, {
-                    'Content-Type': matches[1],
-                    'Content-Length': response.data.length
-                });
-                res.end(response.data);
-                console.log(asciiQR);
-                next();
-            },
-            (statusSession, session) => {
-                console.log('Status Session: ', statusSession);
-                console.log('Session name: ', session);
-            },
+            undefined,
+            undefined,
             {logQR: false,session: 'bot'}
         ).then((client) => {
             start(client)

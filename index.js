@@ -16,22 +16,11 @@ app.use(express.json());
 
 app.get('/init', async function (req, res, next) {
     if (!clienteVenom) {
-        await venom.create(
-            'session',
-            (base64Qr, asciiQR, attempts, urlCode) => {
-                console.log('Number of attempts to read the qrcode: ', attempts);
-                console.log('Terminal qrcode: ', asciiQR);
-                console.log('base64 image string qrcode: ', base64Qrimg);
-                console.log('urlCode (data-ref): ', urlCode);
-            },
-            (statusSession, session) => {
-                console.log('Status Session: ', statusSession);
-                console.log('Session name: ', session);
-            },
-            {logQR: false, session: 'bot'}
-        ).then((client) => {
+        await venom.create({
+            session: 'bot' //name of session
+        }).then((client) => {
             start(client)
-            res.send('Ready!!!! ' + new Date());
+            res.send('Instancia lista: ' + new Date());
         }).catch((e) => console.log('Error al crear instacia', e));
     } else {
         res.send('Ya tienes iniciada una sesión');

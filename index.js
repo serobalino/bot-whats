@@ -1,7 +1,7 @@
 require('dotenv/config');
 const express = require('express');
 const venom = require("venom-bot");
-const {listenMessages} = require("./Controllers/messages");
+const {listenMessages, codeB64, validarParametros} = require("./Controllers/messages");
 const app = express();
 let clienteVenom = null;
 
@@ -12,97 +12,131 @@ function start(client) {
     listenMessages(client);
 }
 
-function validacionMSG(body,res) {
-    if(body){
-        if(body.numero && body.mensaje){
-            return body;
-        }else{
-            res.status(403).send({response:"No hay numero o mensaje"});
-            return false;
-        }
-    }else{
-        res.status(403).send({response:"No hay parametros"});
-        return false;
-    }
-}
-
-function validateIMG(body,res) {
-    if(validacionMSG(body,res)){
-        if(body.path && body.archivo){
-            return body;
-        }else{
-            res.status(403).send({response:"No hay numero o mensaje"});
-            return false;
-        }
-    }else{
-        return false
-    }
-}
-
 app.use(express.json());
 
 app.get('/init', async function (req, res, next) {
-    if(!clienteVenom){
-        let aux = await venom.create(
+    if (!clienteVenom) {
+        await venom.create(
             'session',
             (base64Qr, asciiQR, attempts, urlCode) => {
-                const matches = base64Qr.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/), response = {};
-                if (matches.length !== 3) {
-                    return new Error('Invalid input string');
-                }
-                response.type = matches[1];
-                response.data = new Buffer.from(matches[2], 'base64');
-                res.writeHead(200, {
-                    'Content-Type': matches[1],
-                    'Content-Length': response.data.length
-                });
-                res.end(response.data);
-                console.log(asciiQR);
-                next();
+                console.log('Number of attempts to read the qrcode: ', attempts);
+                console.log('Terminal qrcode: ', asciiQR);
+                console.log('base64 image string qrcode: ', base64Qrimg);
+                console.log('urlCode (data-ref): ', urlCode);
             },
             (statusSession, session) => {
                 console.log('Status Session: ', statusSession);
                 console.log('Session name: ', session);
             },
-            {logQR: false,session: 'bot'}
+            {logQR: false, session: 'bot'}
         ).then((client) => {
             start(client)
-            res.send('Ready!!!! '+ new Date());
-        }).catch((e)=>console.log('Error al crear instacia',e));
-    }else{
+            res.send('Ready!!!! ' + new Date());
+        }).catch((e) => console.log('Error al crear instacia', e));
+    } else {
         res.send('Ya tienes iniciada una sesión');
     }
 });
 
-app.post('/send', function ({body}, res) {
-    if(clienteVenom){
-        const aux = validacionMSG(body, res);
-        clienteVenom.sendText(aux.numero+'@c.us', aux.mensaje).then(response=>{
-            res.status(595).send({val: true, response:response});
-        }).catch(error=>{
-            res.status(401).send({val: false, response:error});
-        });
-        return  true;
-    }
-    res.status(595).send({val: false,response:"No esta levantado los servicios"});
-    return false;
+app.post('/convert', async function ({body}, res) {
+    const aux = await codeB64(body.path);
+    res.status(200).send('<img src="' + aux + '"/>');
 });
 
+app.post('/send', (req, res, next) => {
+    const tipo = req.query?.tipo;
 
-app.post('/sendImg', function ({body}, res) {
-    if(clienteVenom){
-        const aux = validateIMG(body, res);
-        clienteVenom.sendImage(aux.numero+'@c.us', aux.path,aux.archivo,aux.mensaje).then(response=>{
-            res.status(595).send({val: true, response:response});
-        }).catch(error=>{
-            res.status(401).send({val: false, response:error});
-        });
-        return  true;
+    let parametros;
+    let funcion;
+
+    switch (tipo) {
+        case 'imagen':
+            parametros = [
+                {nombre: 'numero', tipo: 'string'},
+                {nombre: 'archivo', tipo: 'string'},
+                {nombre: 'url', tipo: 'string'},
+                {nombre: 'texto', tipo: 'string'},
+            ];
+            funcion = fnImg;
+            break;
+        case 'ubicacion':
+            parametros = [
+                {nombre: 'numero', tipo: 'string'},
+                {nombre: 'latitud', tipo: 'number'},
+                {nombre: 'longitud', tipo: 'number'},
+                {nombre: 'titulo', tipo: 'string'},
+            ];
+            funcion = fnUbi;
+            break;
+        case 'boton':
+            parametros = [
+                {nombre: 'numero', tipo: 'string'},
+                {nombre: 'titulo', tipo: 'string'},
+                {nombre: 'subtitulo', tipo: 'string'},
+                {nombre: 'botones', tipo: 'object'},
+            ];
+            funcion = fnBtn;
+            break;
+        default:
+            parametros = [
+                {nombre: 'numero', tipo: 'string'},
+                {nombre: 'contenido', tipo: 'string'},
+            ];
+            funcion = fnTexto;
+            break;
     }
-    res.status(595).send({val: false,response:"No esta levantado los servicios"});
-    return false;
+    validarParametros(parametros)(req, res, () => {
+        funcion(req, res);
+    });
 });
+
+const fnTexto = (req, res) => {
+    const {numero, contenido} = req.body;
+    const parametros = [numero + '@c.us', contenido];
+    enviarDatos(req, res, clienteVenom, 'sendText', parametros);
+};
+
+const fnImg = (req, res) => {
+    const {numero, archivo, url, texto} = req.body;
+    const parametros = [numero + '@c.us', url, archivo, texto];
+    enviarDatos(req, res, clienteVenom, 'sendImage', parametros);
+};
+
+const fnUbi = (req, res) => {
+    const {numero, latitud, longitud, titulo} = req.body;
+    const parametros = [numero + '@c.us', latitud, longitud, titulo];
+    enviarDatos(req, res, clienteVenom, 'sendLocation', parametros);
+};
+
+const fnBtn = (req, res) => {
+    const {numero, titulo, subtitulo, botones} = req.body;
+    const btnObj = botones.map((palabra, indice) => {
+        return {
+            buttonId: (indice + 1).toString(), // Puedes asignar un ID único a cada botón
+            buttonText: {
+                displayText: palabra,
+            },
+            type: 1,
+        };
+    });
+    const parametros = [numero + '@c.us', titulo, btnObj, subtitulo];
+    enviarDatos(req, res, clienteVenom, 'sendButtons', parametros);
+};
+const enviarDatos = (req, res, clienteVenom, metodo, parametros) => {
+    if (clienteVenom) {
+        clienteVenom[metodo](...parametros)
+            .then(response => {
+                res.status(200).send({val: true, response: response});
+            })
+            .catch(error => {
+                res.status(403).send({val: false, response: error});
+            });
+    } else {
+        res.status(433).send({val: false, response: "No están levantados los servicios"});
+    }
+};
+
 
 app.listen(PORT, function () {
-    console.log('Está arriba la aplicación! {'+PORT+'} ');
+    console.log('Está arriba la aplicación! {' + PORT + '} ');
 });

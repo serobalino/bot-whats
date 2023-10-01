@@ -1,8 +1,25 @@
 const axios = require('axios');
 const fs = require('fs');
 
+const grupoId = "120363104259665759@g.us";
 const listenMessages = (client) => {
     client.onMessage((message) => {
+        if(!message?.author){
+            const nrm = message.from.split('@');
+            client.reply(
+                message.from,
+                '🤖 Mi ser Bender insertar viga por favor (este número pertenece a un robot, en caso de que tengas alguna duda por favor escribe a Liss: 0997380157)\n\n Ten un buen día🌈',
+                message.id
+            );
+            if(message?.content){
+                client.sendText(
+                    grupoId,
+                    nrm[0] + "\n\n" + message.content
+                )
+            }
+        }
+        //todo else respuesta en grupo responder a la persona q escribio
+
         // const separateLines = message.body.split(/\r?\n|\r|\n/g);
         // if(separateLines>=3) {
         //     if(separateLines[0]==="Perro" && separateLines[1]>0){

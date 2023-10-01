@@ -66,6 +66,13 @@ app.post('/send', (req, res, next) => {
             ];
             funcion = fnBtn;
             break;
+        case 'sticker':
+            parametros = [
+                {nombre: 'numero', tipo: 'string'},
+                {nombre: 'url', tipo: 'string'},
+            ];
+            funcion = fnSti;
+            break;
         default:
             parametros = [
                 {nombre: 'numero', tipo: 'string'},
@@ -83,6 +90,12 @@ const fnTexto = (req, res) => {
     const {numero, contenido} = req.body;
     const parametros = [numero + '@c.us', contenido];
     enviarDatos(req, res, clienteVenom, 'sendText', parametros);
+};
+
+const fnSti = (req, res) => {
+    const {numero, url} = req.body;
+    const parametros = [numero + '@c.us', url];
+    enviarDatos(req, res, clienteVenom, 'sendImageAsSticker', parametros);
 };
 
 const fnImg = (req, res) => {
@@ -118,7 +131,15 @@ const enviarDatos = (req, res, clienteVenom, metodo, parametros) => {
                 res.status(200).send({val: true, response: response});
             })
             .catch(error => {
-                res.status(403).send({val: false, response: error});
+                try {
+                    if(error.status.messageSendResult==='OK'){
+                        res.status(200).send({val: true, response: error});
+                    }else{
+                        res.status(403).send({val: false, response: error});
+                    }
+                } catch (e) {
+                    res.status(403).send({val: false, response: error});
+                }
             });
     } else {
         res.status(433).send({val: false, response: "No están levantados los servicios"});

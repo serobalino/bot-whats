@@ -1,0 +1,12 @@
+[Unit]
+Description=ngrok service
+
+[Service]
+ExecStart=/bin/bash /home/srobalino/Documentos/ngrok-bot.sh
+Restart=always
+User=srobalino
+Group=srobalino
+
+
+[Install]
+WantedBy=multi-user.target

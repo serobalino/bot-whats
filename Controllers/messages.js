@@ -7,7 +7,7 @@ const listenMessages = (client) => {
     client.onMessage((message) => {
         if(message?.from!==grupoId){
             const flag = respondidos.find(i=>i===message.from);
-            const nrm = message.from.split('@');;
+            const nrm = message.from.split('@');
             if(message?.type==='chat'){
                 client.sendText(
                     grupoId,

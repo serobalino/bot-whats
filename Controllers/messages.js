@@ -18,7 +18,7 @@ const listenMessages = (client) => {
                 const nrm = message.from.split('@');
                 client.reply(
                     message.from,
-                    '🤖 Mi ser Bender insertar viga por favor, Tu mensaje ha sido envíado a un humano pronto te van a responder.\n\n Ten un buen día 🌈',
+                    '🤖 Mi ser Bender insertar viga por favor (este número es de un robot).\n Tu mensaje ha sido envíado a un humano pronto te van a responder.\n\n Ten un buen día 🌈',
                     message.id
                 ).then(()=>{
                     respondidos.push(message.from)

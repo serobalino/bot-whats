@@ -2,34 +2,39 @@ const axios = require('axios');
 const fs = require('fs');
 
 const grupoId = "120363104259665759@g.us";
+let respondidos = [];
 const listenMessages = (client) => {
     client.onMessage((message) => {
-        if(!message?.author){
-            const nrm = message.from.split('@');
-            client.reply(
-                message.from,
-                '🤖 Mi ser Bender insertar viga por favor (este número pertenece a un robot, en caso de que tengas alguna duda por favor escribe a Liss: 0997380157)\n\n Ten un buen día🌈',
-                message.id
-            );
-            if(message?.content){
+        if(message?.from!==grupoId){
+            const flag = respondidos.find(i=>i===message.from);
+            const nrm = message.from.split('@');;
+            if(message?.type==='chat'){
                 client.sendText(
                     grupoId,
                     nrm[0] + "\n\n" + message.content
                 )
             }
+            if(!flag){
+                const nrm = message.from.split('@');
+                client.reply(
+                    message.from,
+                    '🤖 Mi ser Bender insertar viga por favor, Tu mensaje ha sido envíado a un humano pronto te van a responder.\n\n Ten un buen día 🌈',
+                    message.id
+                ).then(()=>{
+                    respondidos.push(message.from)
+                });
+            }
+        }else{
+            if(message?.quotedMsg && message.type==='chat'){
+                const nrm = message.quotedMsg.body.split('\n\n');
+                if(nrm[0]>0){
+                    client.sendText(
+                        nrm[0]+"@c.us",
+                        message.content
+                    )
+                }
+            }
         }
-        //todo else respuesta en grupo responder a la persona q escribio
-
-        // const separateLines = message.body.split(/\r?\n|\r|\n/g);
-        // if(separateLines>=3) {
-        //     if(separateLines[0]==="Perro" && separateLines[1]>0){
-        //         let aux = message.body.replace(separateLines[0], "");
-        //         aux = aux.replace(separateLines[1], "");
-        //         client.sendText(separateLines[1]+'@c.us', aux);
-        //     }
-        // }else{
-        //     client.sendText('593995764837@c.us',message.from+"\n"+message.body)
-        // }
     })
 };
 

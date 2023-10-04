@@ -4,32 +4,37 @@ const fs = require('fs');
 const grupoId = "120363104259665759@g.us";
 let respondidos = [];
 const listenMessages = (client) => {
-    client.onMessage((message) => {
-        if(message?.from!==grupoId){
-            const flag = respondidos.find(i=>i===message.from);
+    client.onMessage(async (message) => {
+        if (message?.from !== grupoId) {
+            const flag = respondidos.find(i => i === message.from);
             const nrm = message.from.split('@');
-            if(message?.type==='chat'){
+            if (message?.type === 'chat') {
                 client.sendText(
                     grupoId,
                     nrm[0] + "\n\n" + message.content
                 )
             }
-            if(!flag){
-                const nrm = message.from.split('@');
+            if (!flag) {
                 client.reply(
                     message.from,
                     '🤖 Mi ser Bender insertar viga por favor (este número es de un robot).\n Tu mensaje ha sido envíado a un humano pronto te van a responder.\n\n Ten un buen día 🌈',
                     message.id
-                ).then(()=>{
+                ).then(() => {
                     respondidos.push(message.from)
                 });
             }
-        }else{
-            if(message?.quotedMsg && message.type==='chat'){
+        } else {
+            if (message?.quotedMsg && message.type === 'chat') {
                 const nrm = message.quotedMsg.body.split('\n\n');
-                if(nrm[0]>0){
+                if (nrm[0] > 0) {
+                    await client.sendSeen(nrm[0] + "@c.us");
+                    const tiempoDeEspera = calcularTiempoDeEspera(message.content);
+                    await esperar(tiempoDeEspera/2);
+                    await client.startTyping(nrm[0] + "@c.us");
+                    await esperar(tiempoDeEspera);
+                    await client.stopTyping(nrm[0] + "@c.us");
                     client.sendText(
-                        nrm[0]+"@c.us",
+                        nrm[0] + "@c.us",
                         message.content
                     )
                 }
@@ -38,10 +43,21 @@ const listenMessages = (client) => {
     })
 };
 
+const calcularTiempoDeEspera = (mensaje)=> {
+    const tiempoBase = 100;
+    const longitudMensaje = mensaje.length;
+    return tiempoBase * longitudMensaje;
+}
+
+const esperar = async  (ms) => {
+    return new Promise(resolve => {
+        setTimeout(resolve, ms);
+    });
+}
+
 const codeB64 = async (url) => {
     try {
         const response = await axios.get(url, {responseType: 'arraybuffer'});
-
         if (response.status === 200) {
             const contentType = response.headers['content-type'];
             const dataBuffer = Buffer.from(response.data, 'binary');

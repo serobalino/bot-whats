@@ -126,17 +126,21 @@ const fnBtn = (req, res) => {
     const parametros = [numero + '@c.us', titulo, btnObj, subtitulo];
     enviarDatos(req, res, clienteVenom, 'sendButtons', parametros);
 };
-const enviarDatos = (req, res, clienteVenom, metodo, parametros) => {
+const enviarDatos = async (req, res, clienteVenom, metodo, parametros) => {
     if (clienteVenom) {
+        await clienteVenom.sendSeen(parametros[0]);
+        await clienteVenom.startTyping(parametros[0]);
         clienteVenom[metodo](...parametros)
             .then(response => {
+                clienteVenom.stopTyping(parametros[0]);
                 res.status(200).send({val: true, response: response});
             })
             .catch(error => {
+                clienteVenom.stopTyping(parametros[0]);
                 try {
-                    if(error.status.messageSendResult==='OK'){
+                    if (error.status.messageSendResult === 'OK') {
                         res.status(200).send({val: true, response: error});
-                    }else{
+                    } else {
                         res.status(403).send({val: false, response: error});
                     }
                 } catch (e) {

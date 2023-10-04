@@ -3,6 +3,7 @@ const express = require('express');
 const venom = require("venom-bot");
 const {listenMessages, codeB64, validarParametros} = require("./Controllers/messages");
 const app = express();
+const timeout = require('connect-timeout');
 let clienteVenom = null;
 
 const PORT = process.env.PORT || 3000;
@@ -13,6 +14,7 @@ function start(client) {
 }
 
 app.use(express.json());
+app.use(timeout('4s'));
 
 app.get('/init', async function (req, res, next) {
     if (!clienteVenom) {

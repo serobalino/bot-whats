@@ -14,7 +14,7 @@ function start(client) {
 }
 
 app.use(express.json());
-app.use(timeout('4s'));
+app.use(timeout('10s'));
 
 app.get('/init', async function (req, res, next) {
     if (!clienteVenom) {

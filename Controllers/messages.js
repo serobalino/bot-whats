@@ -27,7 +27,6 @@ const listenMessages = (client) => {
             if (message?.quotedMsg && message.type === 'chat') {
                 const nrm = message.quotedMsg.body.split('\n\n');
                 if (nrm[0] > 0) {
-                    await client.sendSeen(nrm[0] + "@c.us");
                     const tiempoDeEspera = calcularTiempoDeEspera(message.content);
                     await esperar(tiempoDeEspera/2);
                     await client.startTyping(nrm[0] + "@c.us");

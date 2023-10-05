@@ -133,33 +133,31 @@ const random = (min, max) => {
 
 const enviarDatos = async (req, res, clienteVenom, metodo, parametros) => {
     if (clienteVenom) {
-        clienteVenom.sendSeen(parametros[0]).then(()=>{
-            setTimeout(()=>{
-                clienteVenom.startTyping(parametros[0]).then(()=>{
-                    setTimeout(()=>{
-                        clienteVenom.stopTyping(parametros[0]).then(()=>{
-                            clienteVenom[metodo](...parametros)
-                                .then(response => {
-                                    clienteVenom.stopTyping(parametros[0]);
-                                    res.status(200).send({val: true, response: response});
-                                })
-                                .catch(error => {
-                                    clienteVenom.stopTyping(parametros[0]);
-                                    try {
-                                        if (error.status.messageSendResult === 'OK') {
-                                            res.status(200).send({val: true, response: error});
-                                        } else {
-                                            res.status(403).send({val: false, response: error});
-                                        }
-                                    } catch (e) {
+        setTimeout(()=>{
+            clienteVenom.startTyping(parametros[0]).then(()=>{
+                setTimeout(()=>{
+                    clienteVenom.stopTyping(parametros[0]).then(()=>{
+                        clienteVenom[metodo](...parametros)
+                            .then(response => {
+                                clienteVenom.stopTyping(parametros[0]);
+                                res.status(200).send({val: true, response: response});
+                            })
+                            .catch(error => {
+                                clienteVenom.stopTyping(parametros[0]);
+                                try {
+                                    if (error.status.messageSendResult === 'OK') {
+                                        res.status(200).send({val: true, response: error});
+                                    } else {
                                         res.status(403).send({val: false, response: error});
                                     }
-                                });
-                        })
-                    }, random(1000,4000))
-                })
-            },random(1000,2000))
-        });
+                                } catch (e) {
+                                    res.status(403).send({val: false, response: error});
+                                }
+                            });
+                    })
+                }, random(1000,4000))
+            })
+        },random(1000,2000))
     } else {
         res.status(433).send({val: false, response: "No están levantados los servicios"});
     }

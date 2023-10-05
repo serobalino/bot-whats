@@ -28,10 +28,8 @@ const listenMessages = (client) => {
                 const nrm = message.quotedMsg.body.split('\n\n');
                 if (nrm[0] > 0) {
                     const tiempoDeEspera = calcularTiempoDeEspera(message.content);
-                    await esperar(tiempoDeEspera/2);
                     await client.startTyping(nrm[0] + "@c.us");
                     await esperar(tiempoDeEspera);
-                    await client.stopTyping(nrm[0] + "@c.us");
                     client.sendText(
                         nrm[0] + "@c.us",
                         message.content

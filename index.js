@@ -137,11 +137,9 @@ const enviarDatos = async (req, res, clienteVenom, metodo, parametros) => {
             setTimeout(() => {
                 clienteVenom[metodo](...parametros)
                     .then(response => {
-                        clienteVenom.stopTyping(parametros[0]);
                         res.status(200).send({val: true, response: response});
                     })
                     .catch(error => {
-                        clienteVenom.stopTyping(parametros[0]);
                         try {
                             if (error.status.messageSendResult === 'OK') {
                                 res.status(200).send({val: true, response: error});
